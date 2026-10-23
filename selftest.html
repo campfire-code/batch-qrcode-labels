@@ -1,0 +1,14 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="UTF-8" /><title>标签 PDF 自检（开发用）</title></head>
+<body><pre id="out">running</pre><script type="module">
+import { buildPdf } from '/src/tool/pdf.ts';
+import { canvasText } from '/src/tool/textimg.ts';
+import { gridSheet, rollSheet, labelsFromSerials, serials } from '/src/tool/core.ts';
+const labels = labelsFromSerials(serials({ prefix: 'ZC-2026-', suffix: '', start: 1, count: 26, step: 1, pad: 4 }), '办公椅（示例）\n编号 {内容}\n一段很长很长的位置说明文字用来测试自动折行和省略号效果');
+const a4 = gridSheet({ pageW: 210, pageH: 297, cols: 3, rows: 8, marginX: 10, marginY: 12, gapX: 3, gapY: 3 });
+const r1 = await buildPdf(labels, a4, { layout: 'left', padding: 2, fontPt: 9, ecc: 'M', border: true, quiet: 4 }, canvasText);
+const r2 = await buildPdf(labels.slice(0, 2), rollSheet(40, 50), { layout: 'top', padding: 2, fontPt: 8, ecc: 'M', border: false, quiet: 4 }, canvasText);
+const b64 = (u) => { let s = ''; for (const x of u) s += String.fromCharCode(x); return btoa(s); };
+window.__pdfs = [b64(r1.bytes), b64(r2.bytes)];
+document.getElementById('out').textContent = `ok a4 pages=${r1.pages} bytes=${r1.bytes.length}; roll pages=${r2.pages}`;
+</script></body></html>

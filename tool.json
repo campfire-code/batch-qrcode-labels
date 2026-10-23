@@ -1,0 +1,16 @@
+{
+  "id": "o15",
+  "slug": "batch-qrcode-labels",
+  "name": "批量二维码标签",
+  "version": "0.1.0",
+  "repo": "campfire-code/batch-qrcode-labels",
+  "license": "MIT",
+  "ui": {
+    "layout": "b",
+    "palette": "teal"
+  },
+  "upstream": {
+    "repo": "soldair/node-qrcode",
+    "license": "MIT"
+  }
+}
