@@ -1,42 +1,28 @@
 // 截图与预览用的示例数据（不会进入正式运行）
-import * as QRCode from 'qrcode';
 import type { Row } from '../kit/runner';
+import { A4, fmt, gridSheet, labelsFromSerials, serials } from './core';
+import { statOf } from './Result';
 
-/** 示例二维码缩略图：用工具同一个库画在画布上 */
-function qrImage(content: string) {
-  const q = QRCode.create(content, { errorCorrectionLevel: 'M' });
-  const n = q.modules.size, k = 6, pad = 4 * k, size = n * k + pad * 2;
-  const c = document.createElement('canvas');
-  c.width = c.height = size;
-  const g = c.getContext('2d')!;
-  g.fillStyle = '#fff'; g.fillRect(0, 0, size, size);
-  g.fillStyle = '#000';
-  for (let r = 0; r < n; r++) for (let col = 0; col < n; col++) if (q.modules.get(r, col)) g.fillRect(pad + col * k, pad + r * k, k, k);
-  return c.toDataURL('image/png');
-}
-
-const text = `24 个标签，共 1 页，标签 61.3 × 31.5 mm
-
-前几个标签：
-1. ZC-2026-0001　｜　ZC-2026-0001
-2. ZC-2026-0002　｜　ZC-2026-0002
-3. ZC-2026-0003　｜　ZC-2026-0003
-4. ZC-2026-0004　｜　ZC-2026-0004
-5. ZC-2026-0005　｜　ZC-2026-0005
-…`;
+const sheet = gridSheet({ pageW: A4.w, pageH: A4.h, cols: 3, rows: 8, marginX: 10, marginY: 12, gapX: 3, gapY: 3 });
+const labels = labelsFromSerials(serials({ prefix: '资产-', suffix: '', start: 1, count: 24, step: 1, pad: 4 }), '{内容}').map((l, i) => ({ ...l, lines: [l.content, ['办公椅', '升降桌', '显示器', '笔记本电脑'][i % 4]] }));
+const stat = statOf(labels, sheet, { paper: 'A4 每页 3×8=24 个', layout: 'left', padding: 2, fontPt: 9, ecc: 'M', pages: 1, count: 24 });
+const size = `${fmt(sheet.labelW)} × ${fmt(sheet.labelH)} mm`;
+const text = `24 个标签，共 1 页，标签 ${size}`;
 
 export const rows = (state: string): Row[] =>
   state === 'empty' ? [] : [
     {
-      item: { id: 'g0', name: '二维码标签（示例）.pdf', path: '' },
+      item: { id: 'g0', name: '二维码标签.pdf', path: '' },
       status: 'ok', progress: 1,
-      result: { preview: qrImage('ZC-2026-0001'), summary: '24 个标签，1 页', outputPath: '/示例/输出/二维码标签.pdf', text, row: { count: 24, pages: 1, paper: 'A4 每页 3×8=24 个', size: '61.3 × 31.5 mm', first: 'ZC-2026-0001' } },
+      result: { summary: '24 个标签，1 页', outputPath: '/示例/输出/二维码标签.pdf', text, data: stat, row: { count: 24, pages: 1, paper: stat.paper, size, first: '资产-0001' } },
     },
     {
-      item: { id: 'g1', name: '固定资产清单（示例）.pdf', path: '' },
+      item: { id: 'g1', name: '固定资产清单.pdf', path: '' },
       status: state === 'done' ? 'ok' : 'run', progress: 0.5,
-      result: state === 'done' ? { summary: '30 个标签，2 页，跳过 1 个空行（第 14 行）', outputPath: '/示例/输出/固定资产清单.pdf', row: { count: 30, pages: 2, paper: 'A4 每页 3×8=24 个', size: '61.3 × 31.5 mm', first: 'ZC-2026-0001' } } : undefined,
+      result: state === 'done' ? { summary: '30 个标签，2 页，跳过 1 个空行（第 14 行）', outputPath: '/示例/输出/固定资产清单.pdf', data: { ...stat, count: 30, pages: 2 }, row: { count: 30, pages: 2, paper: stat.paper, size, first: '资产-0001' } } : undefined,
     },
   ];
 
-export const params = { source: 'rule', prefix: 'ZC-2026-', start: 1, count: 24 };
+export const params = { source: 'rule', prefix: '资产-', start: 1, count: 24 };
+
+export const notice = { kind: 'ok' as const, text: '已生成 2 个 PDF，保存在输出文件夹里' };

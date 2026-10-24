@@ -5,6 +5,8 @@ import { A4, fmt, gridSheet, labelsFromSerials, labelsFromTable, perPage, rollSh
 import { buildPdf, type Ecc, type TextRenderer } from './pdf';
 import { canvasText } from './textimg';
 import { readGrid } from './xlsx';
+import { ResultBody, statOf } from './Result';
+import './tool.css';
 
 /** 可替换的依赖：测试里换成假的文字渲染 */
 export const deps: { render: TextRenderer } = { render: canvasText };
@@ -45,10 +47,11 @@ const tool: GenerateTool = {
   columns: [['count', '标签数'], ['pages', '页数'], ['paper', '纸张'], ['size', '标签尺寸'], ['first', '第一个内容']],
   concurrency: 1,
   generateLabel: '生成 PDF',
+  ResultBody,
   itemName: (_i, p) => `${safeName(String(p.name))}.pdf`,
   params: [
     { key: 'source', label: '内容来源', type: 'segment', options: [['rule', '按编号规则'], ['excel', '从表格导入']], default: 'rule' },
-    { key: 'prefix', label: '编号前缀', type: 'text', default: 'ZC-2026-', placeholder: '例如 ZC-2026-', when: (p) => p.source === 'rule', help: '二维码内容 = 前缀 + 数字，例如 ZC-2026-0001' },
+    { key: 'prefix', label: '编号前缀', type: 'text', default: 'ZC-2026-', placeholder: '例如 资产-2026-', when: (p) => p.source === 'rule', help: '二维码内容 = 前缀 + 数字，例如前缀「资产-」得到「资产-0001」' },
     { key: 'start', label: '起始号', type: 'number', default: 1, min: 0, when: (p) => p.source === 'rule' },
     { key: 'count', label: '数量', type: 'number', default: 24, min: 1, max: 10000, unit: '个', when: (p) => p.source === 'rule' },
     { key: 'pad', label: '数字补零到', type: 'number', default: 4, min: 0, max: 12, unit: '位', when: (p) => p.source === 'rule', help: '填 4 时 1 写成 0001；填 0 不补零' },
@@ -98,6 +101,7 @@ const tool: GenerateTool = {
       title: name,
       outputPath,
       summary: `${labels.length} 个标签，${r.pages} 页${note}`,
+      data: statOf(labels.slice(0, 48), sheet, { paper, layout: p.layout === 'top' ? 'top' : 'left', padding: Number(p.padding), fontPt: Number(p.fontPt), ecc: (String(p.ecc) as Ecc) || 'M', pages: r.pages, count: labels.length }),
       row: { count: labels.length, pages: r.pages, paper, size, first: labels[0].content },
       text: `${labels.length} 个标签，共 ${r.pages} 页，标签 ${size}${note}\n\n前几个标签：\n${sampleText}${labels.length > 5 ? '\n…' : ''}`,
     };
